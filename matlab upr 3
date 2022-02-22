@@ -1,0 +1,58 @@
+% Input audio signal from file
+fn=uigetfile('*.wav');
+[x,fs]=wavread(fn);
+plot(x)
+title('Input audio signal')
+pause
+ms=8;
+nf=220;
+lx=length(x);
+w=hamming(nf);
+%w=hanning(nf);
+%w=rectwin(nf);
+plot(w)
+title('Window function')
+pause
+ww=w.*w;
+xx(1:nf)=0;
+xx=xx';
+sqxx(1:lx)=0;
+sqxx=sqxx';
+for i=1:nf:fix(lx/nf)*nf;
+    xx=x(i:i+nf-1);
+    xx=xx.*w;
+    sqxx(i:i+nf-1)=(xx.*xx)/(2^ms*2^ms);
+end
+en(nf)=sum(sqxx(1:nf));
+for i=nf+1:fix(lx/nf)*nf;
+    en(i)=en(i-1)-sqxx(i-nf)+sqxx(i);
+end
+figure(1)
+subplot(2,1,1)
+plot(x(nf:fix(lx/nf)*nf))
+title('Input audio signal')
+subplot(2,1,2)
+plot(en(nf:fix(lx/nf)*nf))
+title('Energy of the signal')
+pause
+y=x;
+fd=uiputfile('*.wav');
+wavwrite(y,fs,fd);
+aven=sum(en)/length(en);
+maxaven=max(en);
+tvnv=aven+(maxaven-aven)/2;
+for i=nf:length(en);
+    if en(i)>tvnv 
+        vnv(i)=150;
+    else
+        vnv(i)=50;
+    end
+end
+plot(x(nf:length(vnv)))
+title('Output audio signal')
+hold on
+plot(vnv(nf:length(vnv)),'b')
+title('Window function')
+pause
+hold off
+clf
